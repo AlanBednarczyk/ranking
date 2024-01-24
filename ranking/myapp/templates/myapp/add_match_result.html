@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Match Result</title>
+</head>
+<body>
+    <h2>Add Match Result for {{ person.name }}</h2>
+    <form method="post" action="{% url 'add_match_result' person.id %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Add Match Result</button>
+    </form>
+    <a href="{% url 'person_list' %}">Back to Person List</a>
+</body>
+</html>

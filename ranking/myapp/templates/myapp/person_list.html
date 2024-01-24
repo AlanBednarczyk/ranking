@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CS 2</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            cursor: pointer;
+        }
+
+        .counter-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .bottom-section {
+            margin-top: 20px;
+        }
+                /* Dostosowany styl dla "Add Person" */
+        .add-person-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50; /* Zielony kolor tła */
+            color: white; /* Biały kolor tekstu */
+            text-decoration: none;
+            border-radius: 5px; /* Zaokrąglone rogi */
+        }
+
+        .add-person-button:hover {
+            background-color: #45a049; /* Ciemniejszy zielony kolor tła po najechaniu myszką */
+        }
+    </style>
+</head>
+<body>
+    <h2>CS 2</h2>
+    <table>
+        <thead>
+            <tr>
+                <th onclick="sortTable(0)">Imię</th>
+                <th onclick="sortTable(1)">Wygrane</th>
+                <th onclick="sortTable(2)">Przegrane</th>
+                <th onclick="sortTable(3)">Ilość meczy</th>
+                <th onclick="sortTable(4)">% wygranych</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for person in people %}
+                <tr>
+                    <td>{{ person.name }}</td>
+                    <td>
+                        <div class="counter-buttons">
+                            <button onclick="changeMatchCount({{ person.id }}, 'won', 1)">+</button>
+                            <span id="matches_won_{{ person.id }}">{{ person.matches_won }}</span>
+                            <button onclick="changeMatchCount({{ person.id }}, 'won', -1)">-</button>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="counter-buttons">
+                            <button onclick="changeMatchCount({{ person.id }}, 'lost', 1)">+</button>
+                            <span id="matches_lost_{{ person.id }}">{{ person.matches_lost }}</span>
+                            <button onclick="changeMatchCount({{ person.id }}, 'lost', -1)">-</button>
+                        </div>
+                    </td>
+                    <td id="total_matches_{{ person.id }}">{{ person.total_matches }}</td>
+                    <td>{{ person.win_percentage|floatformat:2 }}%</td>
+                    <td>
+                        <a href="{% url 'delete_person' person.id %}">Delete</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a class="add-person-button" href="{% url 'add_person' %}">Dodaj gracza</a>
+    <div class="bottom-section">
+        <h3>Lista graczy</h3>
+        <ul>
+            {% for person in people %}
+                <li>{{ person.name }} - {{ person.win_percentage|floatformat:2 }}%</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <script>
+        async function changeMatchCount(personId, type, value) {
+            const matchesWonElement = document.getElementById(`matches_won_${personId}`);
+            const matchesLostElement = document.getElementById(`matches_lost_${personId}`);
+            const totalMatchesElement = document.getElementById(`total_matches_${personId}`);
+
+            const matchesWon = parseInt(matchesWonElement.textContent);
+            const matchesLost = parseInt(matchesLostElement.textContent);
+            const totalMatches = parseInt(totalMatchesElement.textContent);
+
+            if (type === 'won') {
+                matchesWonElement.textContent = matchesWon + value;
+            } else if (type === 'lost') {
+                matchesLostElement.textContent = matchesLost + value;
+            }
+
+            totalMatchesElement.textContent = totalMatches + value;
+
+            // Zapisz zmiany w bazie danych
+            const response = await fetch(`/api/update_match_count/${personId}/?type=${type}&value=${value}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+            });
+
+            if (!response.ok) {
+                console.error('Failed to update match count:', response.statusText);
+            }
+        }
+
+        function sortTable(columnIndex) {
+            const table = document.querySelector('table');
+            const rows = Array.from(table.rows).slice(1); // Ignoruj wiersz nagłówka
+
+            rows.sort((a, b) => {
+                const aValue = a.cells[columnIndex].textContent;
+                const bValue = b.cells[columnIndex].textContent;
+                return parseFloat(bValue) - parseFloat(aValue);
+            });
+
+            // Wyczyść tabelę
+            rows.forEach(row => table.tBodies[0].appendChild(row));
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+    </script>
+</body>
+</html>
