@@ -27,18 +27,39 @@
         .bottom-section {
             margin-top: 20px;
         }
-                /* Dostosowany styl dla "Add Person" */
+
         .add-person-button {
             display: inline-block;
             padding: 10px 20px;
-            background-color: #4CAF50; /* Zielony kolor tła */
-            color: white; /* Biały kolor tekstu */
+            background-color: #4CAF50;
+            color: white;
             text-decoration: none;
-            border-radius: 5px; /* Zaokrąglone rogi */
+            border-radius: 5px;
         }
 
         .add-person-button:hover {
-            background-color: #45a049; /* Ciemniejszy zielony kolor tła po najechaniu myszką */
+            background-color: #45a049;
+        }
+
+        /* Dodane style dla zaznaczania osób */
+        .selected {
+            background-color: #aaddff; /* Kolor zaznaczenia */
+        }
+
+        /* Dodane style dla przycisku podziału drużyn */
+        .divide-teams-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .divide-teams-button:hover {
+            background-color: #2980b9;
         }
     </style>
 </head>
@@ -53,6 +74,7 @@
                 <th onclick="sortTable(3)">Ilość meczy</th>
                 <th onclick="sortTable(4)">% wygranych</th>
                 <th>Akcje</th>
+                <th>Zaznacz</th> <!-- Nowa kolumna dla zaznaczania osób -->
             </tr>
         </thead>
         <tbody>
@@ -78,6 +100,7 @@
                     <td>
                         <a href="{% url 'delete_person' person.id %}">Delete</a>
                     </td>
+                    <td onclick="toggleSelection(this, {{ person.id }})">Select</td> <!-- Nowa kolumna z przyciskiem zaznaczania -->
                 </tr>
             {% endfor %}
         </tbody>
@@ -87,10 +110,13 @@
         <h3>Lista graczy</h3>
         <ul>
             {% for person in people %}
-                <li>{{ person.name }} - {{ person.win_percentage|floatformat:2 }}%</li>
+                <li>{{ person.name }}</li>
             {% endfor %}
         </ul>
     </div>
+
+    <!-- Nowy przycisk do podziału drużyn -->
+    <div class="divide-teams-button" onclick="divideTeams()">Podziel drużyny</div>
 
     <script>
         async function changeMatchCount(personId, type, value) {
@@ -126,7 +152,7 @@
 
         function sortTable(columnIndex) {
             const table = document.querySelector('table');
-            const rows = Array.from(table.rows).slice(1); // Ignoruj wiersz nagłówka
+            const rows = Array.from(table.rows).slice(1);
 
             rows.sort((a, b) => {
                 const aValue = a.cells[columnIndex].textContent;
@@ -134,7 +160,6 @@
                 return parseFloat(bValue) - parseFloat(aValue);
             });
 
-            // Wyczyść tabelę
             rows.forEach(row => table.tBodies[0].appendChild(row));
         }
 
@@ -143,6 +168,46 @@
             const parts = value.split(`; ${name}=`);
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
-    </script>
+
+        // Nowa funkcja do zaznaczania osób
+        function toggleSelection(cell, personId) {
+            const row = cell.parentNode;
+            row.classList.toggle('selected');
+        }
+
+   // Nowa funkcja do bardziej losowego podziału drużyn
+    function divideTeams() {
+        const table = document.querySelector('table');
+        const rows = Array.from(table.rows).slice(1);
+        const selectedRows = rows.filter(row => row.classList.contains('selected'));
+
+        if (selectedRows.length % 2 !== 0) {
+            alert('Wybierz parzystą liczbę osób do podziału na drużyny.');
+            return;
+        }
+
+        const team1Color = '#ffcccb'; // Kolor drużyny 1
+        const team2Color = '#c2f0c2'; // Kolor drużyny 2
+
+        // Resetuj kolory
+        rows.forEach(row => row.style.backgroundColor = '');
+
+        // Losowo podziel drużyny
+        const shuffledRows = shuffleArray(selectedRows);
+        shuffledRows.forEach((row, index) => {
+            const teamColor = (index % 2 === 0) ? team1Color : team2Color;
+            row.style.backgroundColor = teamColor;
+        });
+    }
+
+    // Funkcja do losowego tasowania elementów w tablicy
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+</script>
 </body>
 </html>
