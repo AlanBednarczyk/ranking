@@ -98,9 +98,9 @@
                     <td id="total_matches_{{ person.id }}">{{ person.total_matches }}</td>
                     <td>{{ person.win_percentage|floatformat:2 }}%</td>
                     <td>
-                        <a href="{% url 'delete_person' person.id %}">Delete</a>
+                        <a href="{% url 'delete_person' person.id %}">Wyjeb</a>
                     </td>
-                    <td onclick="toggleSelection(this, {{ person.id }})">Select</td> <!-- Nowa kolumna z przyciskiem zaznaczania -->
+                    <td onclick="toggleSelection(this, {{ person.id }})">Zaznacz</td> <!-- Nowa kolumna z przyciskiem zaznaczania -->
                 </tr>
             {% endfor %}
         </tbody>
@@ -109,10 +109,10 @@
 
     <!-- Nowa sekcja dla obu list drużyn obok siebie -->
     <div class="bottom-section">
-        <div style="display: flex; gap: 20px;">
+        <div style="display: flex; gap: 100px;">
             <!-- Drużyna 1 -->
             <div>
-                <h3>Drużyna 1</h3>
+                <h3 style="background-color: #ffcccb;">Drużyna 1</h3>
                 <ul id="team1-list">
                     <!-- Lista graczy z drużyny 1 zostanie dodana tutaj dynamicznie -->
                 </ul>
@@ -120,7 +120,7 @@
 
             <!-- Drużyna 2 -->
             <div>
-                <h3>Drużyna 2</h3>
+                <h3 style="background-color: #c2f0c2;">Drużyna 2</h3>
                 <ul id="team2-list">
                     <!-- Lista graczy z drużyny 2 zostanie dodana tutaj dynamicznie -->
                 </ul>
