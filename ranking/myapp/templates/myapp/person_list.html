@@ -106,19 +106,33 @@
         </tbody>
     </table>
     <a class="add-person-button" href="{% url 'add_person' %}">Dodaj gracza</a>
+
+    <!-- Nowa sekcja dla obu list drużyn obok siebie -->
     <div class="bottom-section">
-        <h3>Lista graczy</h3>
-        <ul>
-            {% for person in people %}
-                <li>{{ person.name }}</li>
-            {% endfor %}
-        </ul>
+        <div style="display: flex; gap: 20px;">
+            <!-- Drużyna 1 -->
+            <div>
+                <h3>Drużyna 1</h3>
+                <ul id="team1-list">
+                    <!-- Lista graczy z drużyny 1 zostanie dodana tutaj dynamicznie -->
+                </ul>
+            </div>
+
+            <!-- Drużyna 2 -->
+            <div>
+                <h3>Drużyna 2</h3>
+                <ul id="team2-list">
+                    <!-- Lista graczy z drużyny 2 zostanie dodana tutaj dynamicznie -->
+                </ul>
+            </div>
+        </div>
     </div>
 
     <!-- Nowy przycisk do podziału drużyn -->
     <div class="divide-teams-button" onclick="divideTeams()">Podziel drużyny</div>
 
     <script>
+
         async function changeMatchCount(personId, type, value) {
             const matchesWonElement = document.getElementById(`matches_won_${personId}`);
             const matchesLostElement = document.getElementById(`matches_lost_${personId}`);
@@ -175,30 +189,45 @@
             row.classList.toggle('selected');
         }
 
-   // Nowa funkcja do bardziej losowego podziału drużyn
-    function divideTeams() {
-        const table = document.querySelector('table');
-        const rows = Array.from(table.rows).slice(1);
-        const selectedRows = rows.filter(row => row.classList.contains('selected'));
+        // Nowa funkcja do bardziej losowego podziału drużyn
+        function divideTeams() {
+            const table = document.querySelector('table');
+            const rows = Array.from(table.rows).slice(1);
+            const selectedRows = rows.filter(row => row.classList.contains('selected'));
 
-        if (selectedRows.length % 2 !== 0) {
-            alert('Wybierz parzystą liczbę osób do podziału na drużyny.');
-            return;
-        }
+            if (selectedRows.length % 2 !== 0) {
+                alert('Wybierz parzystą liczbę osób do podziału na drużyny.');
+                return;
+            }
 
         const team1Color = '#ffcccb'; // Kolor drużyny 1
         const team2Color = '#c2f0c2'; // Kolor drużyny 2
 
-        // Resetuj kolory
+        // Resetuj kolory i wyczyść listy drużyn
         rows.forEach(row => row.style.backgroundColor = '');
+        document.getElementById('team1-list').innerHTML = '';
+        document.getElementById('team2-list').innerHTML = '';
 
         // Losowo podziel drużyny
         const shuffledRows = shuffleArray(selectedRows);
         shuffledRows.forEach((row, index) => {
             const teamColor = (index % 2 === 0) ? team1Color : team2Color;
             row.style.backgroundColor = teamColor;
-        });
+
+        // Dodaj osobę do odpowiedniej listy po prawej stronie
+        const personName = row.cells[0].textContent;
+        const teamListId = (index % 2 === 0) ? 'team1-list' : 'team2-list';
+        addToTeamList(personName, teamListId);
+       });
     }
+
+        // Funkcja do dodawania osoby do listy drużyny po prawej stronie
+        function addToTeamList(personName, teamListId) {
+            const teamList = document.getElementById(teamListId);
+            const listItem = document.createElement('li');
+            listItem.textContent = personName;
+            teamList.appendChild(listItem);
+        }
 
     // Funkcja do losowego tasowania elementów w tablicy
     function shuffleArray(array) {
