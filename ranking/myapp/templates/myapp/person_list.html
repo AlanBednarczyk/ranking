@@ -95,11 +95,10 @@
         </thead>
         <tbody>
             {% for person in people %}
-                <tr data-person-id="{{ person.id }}" data-team="{{ person.team }}" onclick="toggleSelection(this, {{ person.id }})">
-                    <td>{{ person.name }}</td>
+                <tr data-person-id="{{ person.id }}" data-team="{{ person.team }}">
+                    <td onclick="toggleSelection(this, {{ person.id }})">{{ person.name }}</td>
                     <td>
                         <div class="counter-buttons">
-
                             <button onclick="changeMatchCount({{ person.id }}, 'won', -1)">-</button>
                             <span id="matches_won_{{ person.id }}">{{ person.matches_won }}</span>
                             <button onclick="changeMatchCount({{ person.id }}, 'won', 1)">+</button>
@@ -198,7 +197,8 @@
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
 
-        function toggleSelection(row, personId) {
+        function toggleSelection(cell, personId) {
+            const row = cell.parentNode;
             row.classList.toggle('selected');
         }
 
