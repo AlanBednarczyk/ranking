@@ -41,12 +41,10 @@
             background-color: #45a049;
         }
 
-        /* Dodane style dla zaznaczania osób */
         .selected {
-            background-color: #aaddff; /* Kolor zaznaczenia */
+            background-color: #aaddff;
         }
 
-        /* Dodane style dla przycisku podziału drużyn */
         .divide-teams-button {
             display: inline-block;
             padding: 10px 20px;
@@ -59,6 +57,25 @@
         }
 
         .divide-teams-button:hover {
+            background-color: #2980b9;
+        }
+
+        .modify-points-buttons {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .modify-points-buttons button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+
+        .modify-points-buttons button:hover {
             background-color: #2980b9;
         }
     </style>
@@ -74,25 +91,25 @@
                 <th onclick="sortTable(3)">Ilość meczy</th>
                 <th onclick="sortTable(4)">% wygranych</th>
                 <th>Akcje</th>
-                <th>Zaznacz</th> <!-- Nowa kolumna dla zaznaczania osób -->
             </tr>
         </thead>
         <tbody>
             {% for person in people %}
-                <tr>
+                <tr data-person-id="{{ person.id }}" data-team="{{ person.team }}" onclick="toggleSelection(this, {{ person.id }})">
                     <td>{{ person.name }}</td>
                     <td>
                         <div class="counter-buttons">
-                            <button onclick="changeMatchCount({{ person.id }}, 'won', 1)">+</button>
-                            <span id="matches_won_{{ person.id }}">{{ person.matches_won }}</span>
+
                             <button onclick="changeMatchCount({{ person.id }}, 'won', -1)">-</button>
+                            <span id="matches_won_{{ person.id }}">{{ person.matches_won }}</span>
+                            <button onclick="changeMatchCount({{ person.id }}, 'won', 1)">+</button>
                         </div>
                     </td>
                     <td>
                         <div class="counter-buttons">
-                            <button onclick="changeMatchCount({{ person.id }}, 'lost', 1)">+</button>
-                            <span id="matches_lost_{{ person.id }}">{{ person.matches_lost }}</span>
                             <button onclick="changeMatchCount({{ person.id }}, 'lost', -1)">-</button>
+                            <span id="matches_lost_{{ person.id }}">{{ person.matches_lost }}</span>
+                            <button onclick="changeMatchCount({{ person.id }}, 'lost', 1)">+</button>
                         </div>
                     </td>
                     <td id="total_matches_{{ person.id }}">{{ person.total_matches }}</td>
@@ -100,39 +117,38 @@
                     <td>
                         <a href="{% url 'delete_person' person.id %}">Wyjeb</a>
                     </td>
-                    <td onclick="toggleSelection(this, {{ person.id }})">Zaznacz</td> <!-- Nowa kolumna z przyciskiem zaznaczania -->
                 </tr>
             {% endfor %}
         </tbody>
     </table>
     <a class="add-person-button" href="{% url 'add_person' %}">Dodaj gracza</a>
 
-    <!-- Nowa sekcja dla obu list drużyn obok siebie -->
     <div class="bottom-section">
         <div style="display: flex; gap: 100px;">
-            <!-- Drużyna 1 -->
             <div>
                 <h3 style="background-color: #ffcccb;">Drużyna 1</h3>
-                <ul id="team1-list">
-                    <!-- Lista graczy z drużyny 1 zostanie dodana tutaj dynamicznie -->
-                </ul>
+                <ul id="team1-list"></ul>
+                <!-- Przyciski do modyfikacji punktów dla Drużyny 1 -->
+                <div class="modify-points-buttons">
+                    <button onclick="modifySelectedMatchCounts('team1', 'won', 1)">Zwiększ wygrane</button>
+                    <button onclick="modifySelectedMatchCounts('team1', 'lost', 1)">Zwiększ przegrane</button>
+                </div>
             </div>
-
-            <!-- Drużyna 2 -->
             <div>
                 <h3 style="background-color: #c2f0c2;">Drużyna 2</h3>
-                <ul id="team2-list">
-                    <!-- Lista graczy z drużyny 2 zostanie dodana tutaj dynamicznie -->
-                </ul>
+                <ul id="team2-list"></ul>
+                <!-- Przyciski do modyfikacji punktów dla Drużyny 2 -->
+                <div class="modify-points-buttons">
+                    <button onclick="modifySelectedMatchCounts('team2', 'won', 1)">Zwiększ wygrane</button>
+                    <button onclick="modifySelectedMatchCounts('team2', 'lost', 1)">Zwiększ przegrane</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Nowy przycisk do podziału drużyn -->
     <div class="divide-teams-button" onclick="divideTeams()">Podziel drużyny</div>
 
     <script>
-
         async function changeMatchCount(personId, type, value) {
             const matchesWonElement = document.getElementById(`matches_won_${personId}`);
             const matchesLostElement = document.getElementById(`matches_lost_${personId}`);
@@ -150,7 +166,6 @@
 
             totalMatchesElement.textContent = totalMatches + value;
 
-            // Zapisz zmiany w bazie danych
             const response = await fetch(`/api/update_match_count/${personId}/?type=${type}&value=${value}`, {
                 method: 'PATCH',
                 headers: {
@@ -183,13 +198,10 @@
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
 
-        // Nowa funkcja do zaznaczania osób
-        function toggleSelection(cell, personId) {
-            const row = cell.parentNode;
+        function toggleSelection(row, personId) {
             row.classList.toggle('selected');
         }
 
-        // Nowa funkcja do bardziej losowego podziału drużyn
         function divideTeams() {
             const table = document.querySelector('table');
             const rows = Array.from(table.rows).slice(1);
@@ -200,28 +212,24 @@
                 return;
             }
 
-        const team1Color = '#ffcccb'; // Kolor drużyny 1
-        const team2Color = '#c2f0c2'; // Kolor drużyny 2
+            const team1Color = '#ffcccb';
+            const team2Color = '#c2f0c2';
 
-        // Resetuj kolory i wyczyść listy drużyn
-        rows.forEach(row => row.style.backgroundColor = '');
-        document.getElementById('team1-list').innerHTML = '';
-        document.getElementById('team2-list').innerHTML = '';
+            rows.forEach(row => row.style.backgroundColor = '');
+            document.getElementById('team1-list').innerHTML = '';
+            document.getElementById('team2-list').innerHTML = '';
 
-        // Losowo podziel drużyny
-        const shuffledRows = shuffleArray(selectedRows);
-        shuffledRows.forEach((row, index) => {
-            const teamColor = (index % 2 === 0) ? team1Color : team2Color;
-            row.style.backgroundColor = teamColor;
+            const shuffledRows = shuffleArray(selectedRows);
+            shuffledRows.forEach((row, index) => {
+                const teamColor = (index % 2 === 0) ? team1Color : team2Color;
+                row.style.backgroundColor = teamColor;
 
-        // Dodaj osobę do odpowiedniej listy po prawej stronie
-        const personName = row.cells[0].textContent;
-        const teamListId = (index % 2 === 0) ? 'team1-list' : 'team2-list';
-        addToTeamList(personName, teamListId);
-       });
-    }
+                const personName = row.cells[0].textContent;
+                const teamListId = (index % 2 === 0) ? 'team1-list' : 'team2-list';
+                addToTeamList(personName, teamListId);
+            });
+        }
 
-        // Funkcja do dodawania osoby do listy drużyny po prawej stronie
         function addToTeamList(personName, teamListId) {
             const teamList = document.getElementById(teamListId);
             const listItem = document.createElement('li');
@@ -229,14 +237,22 @@
             teamList.appendChild(listItem);
         }
 
-    // Funkcja do losowego tasowania elementów w tablicy
-    function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
         }
-        return array;
-    }
-</script>
+
+        async function modifySelectedTeamMatchCounts(team, type, value) {
+            const selectedRows = document.querySelectorAll(`tr.selected[data-team="${team}"]`);
+
+            for (const row of selectedRows) {
+                const personId = row.dataset.personId;
+                await changeMatchCount(personId, type, value);
+            }
+        }
+    </script>
 </body>
 </html>
